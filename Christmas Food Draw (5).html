@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎄 Christmas Country Food Draw 🎅</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    .font-festive {
+      font-family: 'Mountains of Christmas', cursive;
+    }
+
+    /* Falling Snow Effect */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: #fff;
+      font-size: 1em;
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: 10;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-10px) rotate(0deg);
+      }
+      100% {
+        transform: translateY(105vh) rotate(360deg);
+      }
+    }
+
+    /* Wheel Pointer Indicator */
+    .wheel-pointer {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 32px solid #fbbf24;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+      z-index: 20;
+    }
+
+    /* Custom Glassmorphic Card */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #ef4444;
+      border-radius: 4px;
+    }
+
+    /* Modal Animation */
+    .modal-enter {
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body class="relative pb-12">
+
+  <!-- Snowfall Container -->
+  <div id="snow-container"></div>
+
+  <!-- Header Section -->
+  <header class="text-center pt-8 pb-4 px-4">
+    <div class="inline-flex items-center gap-3 bg-red-600/80 px-6 py-2 rounded-full border border-yellow-400 shadow-lg mb-3">
+      <span class="text-2xl">🎅</span>
+      <span class="text-yellow-300 font-bold tracking-wide uppercase text-sm sm:text-base">Christmas Party 2024</span>
+      <span class="text-2xl">🎄</span>
+    </div>
+    <h1 class="font-festive text-5xl sm:text-7xl font-bold text-yellow-300 drop-shadow-md tracking-wider">
+      Secret Food Selection
+    </h1>
+    <p class="text-gray-200 text-sm sm:text-base mt-2 max-w-md mx-auto">
+      Enter your name and spin the wheel to discover which country's delicious dish you'll bring! 🍷🍕🍣
+    </p>
+  </header>
+
+  <!-- Main Content Grid -->
+  <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-4">
+    
+    <!-- Left Column: Input Form & Wheel -->
+    <section class="lg:col-span-7 glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+      
+      <!-- Participant Input Section -->
+      <div class="mb-6">
+        <label for="participant-name" class="block text-yellow-300 font-semibold mb-2 text-base sm:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-user-tag text-red-400"></i> Enter Participant Name:
+        </label>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input 
+            type="text" 
+            id="participant-name" 
+            placeholder="e.g., Santa Claus, Alex, Sarah..." 
+            class="flex-1 px-5 py-3.5 rounded-2xl bg-slate-900/70 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-500 border border-slate-700 text-lg transition-all"
+            maxlength="25"
+          />
+          <button 
+            id="spin-btn" 
+            onclick="startSpin()"
+            class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-500 hover:to-yellow-400 text-white font-extrabold text-lg shadow-lg hover:shadow-red-500/50 transform hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i class="fa-solid fa-dharmachakra"></i> SPIN NOW!
+          </button>
+        </div>
+        <!-- Error Message Alert -->
+        <p id="error-msg" class="text-red-400 text-sm font-semibold mt-2 hidden flex items-center gap-1">
+          <i class="fa-solid fa-circle-exclamation"></i> Please enter a name before spinning!
+        </p>
+      </div>
+
+      <!-- Wheel Visual Container -->
+      <div class="relative flex justify-center items-center py-4">
+        <!-- Wheel Pointer -->
+        <div class="wheel-pointer"></div>
+
+        <!-- Canvas Wheel -->
+        <div class="relative p-2 rounded-full border-4 border-yellow-400/80 shadow-[0_0_35px_rgba(234,179,8,0.3)] bg-slate-900/80">
+          <canvas id="wheel-canvas" width="400" height="400" class="max-w-full h-auto rounded-full cursor-pointer"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right Column: Live Results List -->
+    <section class="lg:col-span-5 glass-card rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col h-full min-h-[480px]">
+      <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
+        <div>
+          <h2 class="font-festive text-3xl text-yellow-300 font-bold flex items-center gap-2">
+            <i class="fa-solid fa-utensils text-red-400 text-2xl"></i> Draw Results
+          </h2>
+          <p class="text-xs text-gray-300">Who is bringing what to the party!</p>
+        </div>
+        <button 
+          onclick="clearAllResults()"
+          class="text-xs bg-red-800/60 hover:bg-red-700 text-red-200 hover:text-white px-3 py-2 rounded-xl transition border border-red-500/30 flex items-center gap-1"
+          title="Clear all results"
+        >
+          <i class="fa-solid fa-trash-can"></i> Clear All
+        </button>
+      </div>
+
+      <!-- Summary List / Table -->
+      <div id="results-container" class="flex-1 overflow-y-auto max-h-[420px] space-y-3 pr-1">
+        <!-- Dynamic Result Cards injected here -->
+      </div>
+
+      <!-- Empty State Indicator -->
+      <div id="empty-state" class="flex flex-col items-center justify-center flex-1 py-12 text-center text-gray-400">
+        <i class="fa-solid fa-gift text-5xl mb-3 text-red-400/60 animate-bounce"></i>
+        <p class="text-base font-medium">No draws yet!</p>
+        <p class="text-xs text-gray-400">Enter a name above and click spin to begin.</p>
+      </div>
+
+      <!-- Counter Footer -->
+      <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-xs text-gray-300">
+        <span>Total Assigned: <strong id="total-count" class="text-yellow-300 text-sm">0</strong></span>
+        <span>Countries: <strong class="text-yellow-300 text-sm">12 Available</strong></span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Winner Celebration Modal -->
+  <div id="result-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden">
+    <div class="glass-card bg-slate-900/90 border-2 border-yellow-400 rounded-3xl p-8 max-w-md w-full text-center relative shadow-2xl modal-enter">
+      
+      <!-- Festive Decor Corner Icons -->
+      <span class="absolute top-3 left-4 text-2xl">🎄</span>
+      <span class="absolute top-3 right-4 text-2xl">🎁</span>
+
+      <div class="my-4">
+        <span class="text-6xl inline-block animate-bounce" id="modal-flag">🇮🇹</span>
+      </div>
+
+      <h3 class="text-gray-300 uppercase tracking-widest text-xs font-bold mb-1">Congratulations!</h3>
+      <h2 id="modal-name" class="text-3xl font-extrabold text-white mb-2">Participant</h2>
+      
+      <p class="text-gray-200 text-sm mb-4">You will be bringing traditional cuisine from:</p>
+
+      <div class="bg-gradient-to-r from-red-600 to-yellow-600 rounded-2xl p-4 shadow-lg mb-6 border border-yellow-300/40">
+        <div id="modal-country" class="text-2xl sm:text-3xl font-extrabold text-white tracking-wide drop-shadow-md">
+          Italy
+        </div>
+      </div>
+
+      <button 
+        onclick="closeModal()" 
+        class="w-full py-3.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold text-lg rounded-xl shadow-lg transition transform hover:scale-105 active:scale-95"
+      >
+        <i class="fa-solid fa-check-circle mr-1"></i> Awesome, Got It!
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 12 Target Countries Configuration
+    const countries = [
+      { name: "Italy", flag: "🇮🇹", color: "#e63946" },
+      { name: "Japan", flag: "🇯🇵", color: "#457b9d" },
+      { name: "South Korea", flag: "🇰🇷", color: "#2a9d8f" },
+      { name: "Mexico", flag: "🇲🇽", color: "#e9c46a" },
+      { name: "Malaysia", flag: "🇲🇾", color: "#f4a261" },
+      { name: "Spain", flag: "🇪🇸", color: "#e76f51" },
+      { name: "United States", flag: "🇺🇸", color: "#3a86ff" },
+      { name: "France", flag: "🇫🇷", color: "#8338ec" },
+      { name: "Thailand", flag: "🇹🇭", color: "#ff006e" },
+      { name: "Germany", flag: "🇩🇪", color: "#fb5607" },
+      { name: "United Kingdom", flag: "🇬🇧", color: "#06d6a0" },
+      { name: "Switzerland", flag: "🇨🇭", color: "#d62828" }
+    ];
+
+    // State Variables
+    let currentRotation = 0;
+    let isSpinning = false;
+    let resultsList = [];
+
+    // Canvas Setup
+    const canvas = document.getElementById("wheel-canvas");
+    const ctx = canvas.getContext("2d");
+    const numSlices = countries.length;
+    const sliceAngle = (2 * Math.PI) / numSlices;
+
+    // Web Audio API Sound Synthesizer (No external audio files needed)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTickSound() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    function playFanfareSound() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const notes = [261.63, 329.63, 392.00, 523.25]; // C E G C
+      notes.forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + index * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.1 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + index * 0.1);
+        osc.stop(audioCtx.currentTime + index * 0.1 + 0.3);
+      });
+    }
+
+    // Initialize Page & Load Saved Data
+    window.onload = function() {
+      createSnowflakes();
+      drawWheel(currentRotation);
+      loadSavedResults();
+    };
+
+    // Draw Wheel Canvas
+    function drawWheel(angleOffset) {
+      const radius = canvas.width / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(angleOffset);
+
+      for (let i = 0; i < numSlices; i++) {
+        const startAngle = i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        // Draw Wedge Slice
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius - 8, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = countries[i].color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff33';
+        ctx.stroke();
+
+        // Draw Text & Flag
+        ctx.save();
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 15px Nunito";
+        
+        // Draw Flag Emoji and Country Name
+        const label = `${countries[i].flag} ${countries[i].name}`;
+        ctx.fillText(label, radius - 24, 5);
+        ctx.restore();
+      }
+
+      // Inner Center Circle Cap
+      ctx.beginPath();
+      ctx.arc(0, 0, 38, 0, 2 * Math.PI);
+      ctx.fillStyle = "#0f172a";
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#fbbf24";
+      ctx.stroke();
+
+      // Center Star Emoji
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "20px sans-serif";
+      ctx.fillText("⭐", 0, 2);
+
+      ctx.restore();
+    }
+
+    // Start Spin Action
+    function startSpin() {
+      if (isSpinning) return;
+
+      const nameInput = document.getElementById("participant-name");
+      const errorMsg = document.getElementById("error-msg");
+      const participantName = nameInput.value.trim();
+
+      // Validation Check
+      if (!participantName) {
+        errorMsg.classList.remove("hidden");
+        nameInput.focus();
+        nameInput.classList.add("border-red-500", "animate-pulse");
+        setTimeout(() => nameInput.classList.remove("animate-pulse"), 1000);
+        return;
+      }
+      errorMsg.classList.add("hidden");
+      nameInput.classList.remove("border-red-500");
+
+      isSpinning = true;
+      document.getElementById("spin-btn").disabled = true;
+
+      // Calculate Target Angle
+      // Add random spins (5 to 8 full rotations) + random offset slice
+      const extraSpins = 5 + Math.floor(Math.random() * 4);
+      const randomSliceIndex = Math.floor(Math.random() * numSlices);
+      
+      // Calculate landing angle so pointer at top (-Math.PI/2) aligns with selected slice
+      const targetSliceCenterAngle = (randomSliceIndex * sliceAngle) + (sliceAngle / 2);
+      // Top position relative angle offset
+      const finalAngleOffset = (3 * Math.PI / 2) - targetSliceCenterAngle;
+      
+      const totalDegreesToRotate = (extraSpins * 2 * Math.PI) + finalAngleOffset - (currentRotation % (2 * Math.PI));
+      
+      const startAngle = currentRotation;
+      const endAngle = currentRotation + totalDegreesToRotate;
+      
+      const spinDuration = 4500; // 4.5 seconds
+      const startTime = performance.now();
+      let lastSlicePlayed = -1;
+
+      function animateSpin(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+
+        // Cubic Easing Out
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        currentRotation = startAngle + (endAngle - startAngle) * easeOut;
+
+        drawWheel(currentRotation);
+
+        // Play ticking sound when crossing slices
+        const normalizedAngle = (currentRotation % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const currentSliceUnderPointer = Math.floor(((3 * Math.PI / 2 - normalizedAngle + 2 * Math.PI) % (2 * Math.PI)) / sliceAngle);
+        if (currentSliceUnderPointer !== lastSlicePlayed) {
+          playTickSound();
+          lastSlicePlayed = currentSliceUnderPointer;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          // Spin Finished!
+          isSpinning = false;
+          document.getElementById("spin-btn").disabled = false;
+          
+          const winnerIndex = (numSlices - Math.floor(((currentRotation + Math.PI / 2) % (2 * Math.PI)) / sliceAngle)) % numSlices;
+          const selectedCountry = countries[winnerIndex];
+
+          handleDrawSuccess(participantName, selectedCountry);
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    // Handle Draw Result Reveal
+    function handleDrawSuccess(name, country) {
+      playFanfareSound();
+      
+      // Trigger Festive Confetti
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+
+      // Show Result Modal
+      document.getElementById("modal-name").innerText = name;
+      document.getElementById("modal-country").innerText = country.name;
+      document.getElementById("modal-flag").innerText = country.flag;
+      document.getElementById("result-modal").classList.remove("hidden");
+
+      // Record Result
+      const newEntry = {
+        id: Date.now(),
+        name: name,
+        countryName: country.name,
+        flag: country.flag,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      resultsList.unshift(newEntry);
+      saveAndRenderResults();
+
+      // Clear input field for next participant
+      document.getElementById("participant-name").value = "";
+    }
+
+    // Close Result Modal
+    function closeModal() {
+      document.getElementById("result-modal").classList.add("hidden");
+    }
+
+    // Save to LocalStorage & Render UI Table List
+    function saveAndRenderResults() {
+      localStorage.setItem("christmas_food_draw_results", JSON.stringify(resultsList));
+      renderResultsList();
+    }
+
+    function loadSavedResults() {
+      const saved = localStorage.getItem("christmas_food_draw_results");
+      if (saved) {
+        try {
+          resultsList = JSON.parse(saved);
+        } catch (e) {
+          resultsList = [];
+        }
+      }
+      renderResultsList();
+    }
+
+    function renderResultsList() {
+      const container = document.getElementById("results-container");
+      const emptyState = document.getElementById("empty-state");
+      const totalCount = document.getElementById("total-count");
+
+      totalCount.innerText = resultsList.length;
+
+      if (resultsList.length === 0) {
+        container.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      container.innerHTML = resultsList.map(item => `
+        <div class="glass-card bg-slate-900/60 hover:bg-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between transition border border-white/10 group">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl bg-slate-800 p-2 rounded-xl border border-white/5 shadow-inner">${item.flag}</span>
+            <div>
+              <div class="font-bold text-white text-base leading-tight">${escapeHtml(item.name)}</div>
+              <div class="text-yellow-400 text-xs font-semibold mt-0.5">${item.countryName} Cuisine</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-gray-400 font-mono hidden sm:inline">${item.timestamp}</span>
+            <button 
+              onclick="deleteResult(${item.id})"
+              class="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition opacity-80 group-hover:opacity-100"
+              title="Delete entry"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Delete Single Result
+    function deleteResult(id) {
+      resultsList = resultsList.filter(item => item.id !== id);
+      saveAndRenderResults();
+    }
+
+    // Clear All Results
+    function clearAllResults() {
+      if (resultsList.length === 0) return;
+      if (confirm("Are you sure you want to clear all draw results?")) {
+        resultsList = [];
+        saveAndRenderResults();
+      }
+    }
+
+    // Helper: Escape HTML string
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    // Generate Background Snow Effect
+    function createSnowflakes() {
+      const snowContainer = document.getElementById("snow-container");
+      const snowflakeCount = 35;
+      const icons = ['❄', '❅', '❆'];
+
+      for (let i = 0; i < snowflakeCount; i++) {
+        const flake = document.createElement("div");
+        flake.className = "snowflake";
+        flake.innerText = icons[Math.floor(Math.random() * icons.length)];
+        flake.style.left = Math.random() * 100 + "vw";
+        flake.style.animationDuration = Math.random() * 5 + 5 + "s";
+        flake.style.animationDelay = Math.random() * 5 + "s";
+        flake.style.fontSize = Math.random() * 10 + 10 + "px";
+        flake.style.opacity = Math.random() * 0.7 + 0.3;
+        snowContainer.appendChild(flake);
+      }
+    }
+  </script>
+</body>
+</html>
